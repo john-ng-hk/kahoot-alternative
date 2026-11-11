@@ -62,7 +62,8 @@ export default function Home({
       setQuizSet(data)
     }
 
-    const setGameListner = async () => {
+    /** Re-read participants and the game row; also run after a reconnect because missed realtime events are not replayed */
+    const syncState = async () => {
       const { data } = await supabase
         .from('participants')
         .select()
@@ -70,6 +71,23 @@ export default function Home({
         .order('created_at')
       if (data) setParticipants(data)
 
+      const { data: gameData, error: gameError } = await supabase
+        .from('games')
+        .select()
+        .eq('id', gameId)
+        .single()
+
+      if (gameError) {
+        alert(gameError.message)
+        console.error(gameError)
+        return
+      }
+
+      setCurrentQuestionSequence(gameData.current_question_sequence)
+      setCurrentScreen(gameData.phase as AdminScreens)
+    }
+
+    const setGameListner = () => {
       supabase
         .channel('game')
         .on(
@@ -101,22 +119,9 @@ export default function Home({
             setCurrentScreen(game.phase as AdminScreens)
           }
         )
-        .subscribe()
-
-      const { data: gameData, error: gameError } = await supabase
-        .from('games')
-        .select()
-        .eq('id', gameId)
-        .single()
-
-      if (gameError) {
-        alert(gameError.message)
-        console.error(gameError)
-        return
-      }
-
-      setCurrentQuestionSequence(gameData.current_question_sequence)
-      setCurrentScreen(gameData.phase as AdminScreens)
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') syncState()
+        })
     }
 
     getQuestions()

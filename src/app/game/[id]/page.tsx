@@ -51,6 +51,20 @@ export default function Home({
     getQuestions(game.quiz_set_id)
   }
 
+  /** Re-read the game row; used after a (re)connect because missed realtime events are not replayed */
+  const syncGame = async () => {
+    if (!stateRef.current) return
+    const { data: game } = await supabase
+      .from('games')
+      .select()
+      .eq('id', gameId)
+      .single()
+    if (!game) return
+    setCurrentScreen(game.phase as Screens)
+    setCurrentQuestionSequence(game.current_question_sequence)
+    setIsAnswerRevealed(game.is_answer_revealed)
+  }
+
   const getQuestions = async (quizSetId: string) => {
     const { data, error } = await supabase
       .from('questions')
@@ -91,7 +105,9 @@ export default function Home({
             }
           }
         )
-        .subscribe()
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') syncGame()
+        })
     }
 
     const gameChannel = setGameListner()

@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "6be69e4a-7ca1-4bc5-8347-0f61b724ebca",
+  "status": "current",
+  "command": "deliver",
+  "type": "architecture",
+  "input": "/Users/jonchker/Documents/GitHub/kahoot-alternative/.archify/architecture-kahoot-alternative-20261112-004825/candidate.json",
+  "output": "/Users/jonchker/Documents/GitHub/kahoot-alternative/.archify/architecture-kahoot-alternative-20261112-004825/kahoot-alternative-architecture.html",
+  "specification": {
+    "sha256": "fe6108704d593e0f90e00da4cc712834115d1a014f0aa84cfb90d64d48e187a1",
+    "bytes": 6194
+  },
+  "artifact": {
+    "sha256": "22d32cba2c4c06142122f73e458fcb7f33233d813875486848c7f06d85cb8c8a",
+    "bytes": 848501
+  }
+}

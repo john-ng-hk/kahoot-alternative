@@ -1,0 +1,151 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Kahoot alternative: system architecture",
+    "locale": "en",
+    "output": ".archify/architecture-kahoot-alternative-20261112-004825/kahoot-alternative-architecture.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/supabase-community/kahoot-alternative.git",
+      "provider": "github",
+      "link_mode": "web",
+      "revision": "dbb444b9b8c474b3642df3bdf87ee46230764aaf"
+    }
+  },
+  "components": [
+    {
+      "id": "browser",
+      "type": "external",
+      "label": "Host and player browsers",
+      "sublabel": "/host/*, /game/[id]",
+      "pos": [40, 230],
+      "size": [200, 80],
+      "sources": [
+        { "path": "src/app/game/[id]/page.tsx", "line": 15, "end_line": 124, "label": "player page" },
+        { "path": "src/app/host/dashboard/page.tsx", "line": 24, "end_line": 47, "label": "host creates game" },
+        { "path": "src/app/host/game/[id]/quiz.tsx", "line": 27, "end_line": 45, "label": "host advances question" }
+      ]
+    },
+    {
+      "id": "next",
+      "type": "frontend",
+      "label": "Next.js 14 app",
+      "sublabel": "client components, no API routes",
+      "pos": [40, 40],
+      "size": [200, 80],
+      "sources": [
+        { "path": "next.config.mjs", "line": 4, "end_line": 19, "label": "redirects / and /host" },
+        { "path": "package.json", "line": 17, "label": "next 14.2.15" },
+        { "path": "src/app/game/[id]/page.tsx", "line": 1, "label": "'use client' page" }
+      ]
+    },
+    {
+      "id": "auth",
+      "type": "security",
+      "label": "Supabase Auth",
+      "sublabel": "anonymous sign-in",
+      "pos": [410, 40],
+      "size": [200, 80],
+      "sources": [
+        { "path": "src/app/host/dashboard/page.tsx", "line": 25, "end_line": 30, "label": "host sign-in" },
+        { "path": "src/app/game/[id]/lobby.tsx", "line": 18, "end_line": 27, "label": "player sign-in" }
+      ]
+    },
+    {
+      "id": "dataapi",
+      "type": "backend",
+      "label": "Supabase Data API",
+      "sublabel": "REST via supabase-js",
+      "pos": [410, 230],
+      "size": [200, 80],
+      "sources": [
+        { "path": "src/types/types.ts", "line": 4, "end_line": 8, "label": "single supabase client" },
+        { "path": "src/app/game/[id]/quiz.tsx", "line": 42, "end_line": 47, "label": "player inserts answer" }
+      ]
+    },
+    {
+      "id": "realtime",
+      "type": "messagebus",
+      "label": "Supabase Realtime",
+      "sublabel": "postgres_changes channels",
+      "pos": [410, 420],
+      "size": [200, 80],
+      "sources": [
+        { "path": "src/app/game/[id]/page.tsx", "line": 68, "end_line": 95, "label": "player games UPDATE" },
+        { "path": "src/app/host/game/[id]/page.tsx", "line": 73, "end_line": 104, "label": "host participants and games" },
+        { "path": "src/app/host/game/[id]/quiz.tsx", "line": 66, "end_line": 89, "label": "host answers INSERT" }
+      ]
+    },
+    {
+      "id": "postgres",
+      "type": "database",
+      "label": "PostgreSQL",
+      "sublabel": "6 tables, game_results view",
+      "pos": [780, 230],
+      "size": [200, 80],
+      "sources": [
+        { "path": "supabase/migrations/20231215125748_remote_schema.sql", "line": 1, "end_line": 53, "label": "six tables" },
+        { "path": "supabase/migrations/20231215125748_remote_schema.sql", "line": 55, "end_line": 56, "label": "realtime publication" },
+        { "path": "supabase/migrations/20240410082019_result_view.sql", "line": 1, "end_line": 12, "label": "game_results view" }
+      ]
+    },
+    {
+      "id": "rls",
+      "type": "security",
+      "label": "Row Level Security",
+      "sublabel": "RLS on all 6 tables",
+      "pos": [780, 40],
+      "size": [200, 80],
+      "sources": [
+        { "path": "supabase/migrations/20240412023540_rls.sql", "line": 37, "end_line": 40, "label": "games: host-only writes" },
+        { "path": "supabase/migrations/20240412023540_rls.sql", "line": 42, "end_line": 44, "label": "participants insert" },
+        { "path": "supabase/migrations/20240412023540_rls.sql", "line": 46, "end_line": 48, "label": "answers insert: with check true" }
+      ]
+    }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "Supabase project (local stack or hosted)", "wraps": ["auth", "dataapi", "realtime", "postgres", "rls"] }
+  ],
+  "connections": [
+    { "id": "serves-pages", "from": "next", "to": "browser", "label": "serves pages" },
+    { "id": "anonymous-sign-in", "from": "browser", "to": "auth", "label": "anonymous sign-in", "variant": "security" },
+    { "id": "rest-queries", "from": "browser", "to": "dataapi", "label": "REST queries" },
+    { "id": "sql-under-rls", "from": "dataapi", "to": "postgres", "label": "SQL under RLS" },
+    { "id": "enforces-rls", "from": "rls", "to": "postgres", "label": "enforces RLS", "variant": "security" },
+    { "id": "change-stream", "from": "postgres", "to": "realtime", "label": "change stream" },
+    { "id": "push-changes", "from": "realtime", "to": "browser", "label": "push changes" }
+  ],
+  "cards": [
+    {
+      "dot": "violet",
+      "title": "Host flow",
+      "items": [
+        "Dashboard inserts a games row, then opens /host/game/[id]",
+        "Lobby sets phase to quiz",
+        "Next button moves the sequence; the last question sets phase to result",
+        "Reveal happens when every player has answered or the 20 s timer ends",
+        "Results read the game_results view"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Player flow",
+      "items": [
+        "Anonymous sign-in, then a participants row is inserted",
+        "Questions and reveal follow games UPDATE events",
+        "Answer is inserted into answers with its score",
+        "Final screen is a static thank-you message"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Security notes",
+      "items": [
+        "games insert and update require host_user_id = auth.uid()",
+        "answers insert policy is with check (true): any client with the anon key can write any answer row",
+        "Scores are computed in the player browser and stored without server checks"
+      ]
+    }
+  ]
+}

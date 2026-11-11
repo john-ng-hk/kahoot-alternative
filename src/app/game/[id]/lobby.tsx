@@ -87,11 +87,11 @@ function Register({
 }) {
   const onFormSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    setSending(true)
 
     if (!nickname) {
       return
     }
+    setSending(true)
     const { data: participant, error } = await supabase
       .from('participants')
       .insert({ nickname, game_id: gameId })
