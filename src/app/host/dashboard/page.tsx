@@ -3,6 +3,7 @@
 import { Button } from '@/components/ui/button'
 import { Notice } from '@/components/ui/notice'
 import { QuizSet, supabase } from '@/types/types'
+import Link from 'next/link'
 import { useEffect, useState } from 'react'
 
 export default function Home() {
@@ -12,9 +13,14 @@ export default function Home() {
 
   useEffect(() => {
     const getQuizSets = async () => {
+      // Only the host's own quizzes. Built-in presets have no owner and are not listed.
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
       const { data, error } = await supabase
         .from('quiz_sets')
         .select(`*, questions(*, choices(*))`)
+        .eq('owner_user_id', user?.id ?? '')
         .order('created_at', { ascending: false })
       setLoaded(true)
       if (error) {
@@ -50,7 +56,15 @@ export default function Home() {
       <h1 className="text-2xl font-bold text-ink mb-4">Quiz sets</h1>
       {error && <Notice>{error}</Notice>}
       {loaded && quizSet.length === 0 && !error && (
-        <p className="text-gray-700">No quiz sets yet.</p>
+        <p className="text-gray-700">
+          No quiz sets yet.{' '}
+          <Link
+            className="text-accent underline"
+            href="/host/dashboard/quizzes/new"
+          >
+            Create your first quiz
+          </Link>
+        </p>
       )}
       <div className="flex flex-col gap-4">
         {quizSet.map((quizSet) => (

@@ -9,7 +9,11 @@ import { useEffect, useState } from 'react'
 type GateState = 'loading' | 'signed-out' | 'signed-in'
 
 /** Host pages need an email sign-in. Anonymous sessions cannot own quizzes (RLS enforces this too). */
-export default function SignInGate({ children }: { children: React.ReactNode }) {
+export default function SignInGate({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   const [state, setState] = useState<GateState>('loading')
   const [email, setEmail] = useState('')
   const [sent, setSent] = useState(false)
@@ -19,15 +23,21 @@ export default function SignInGate({ children }: { children: React.ReactNode }) 
   useEffect(() => {
     // is_anonymous is in the JWT and on the user object, but missing from this supabase-js version's User type
     const applySession = (user: User | null | undefined) => {
-      const isAnonymous = (user as (User & { is_anonymous?: boolean }) | undefined)?.is_anonymous === true
+      const isAnonymous =
+        (user as (User & { is_anonymous?: boolean }) | undefined)
+          ?.is_anonymous === true
       setState(user && !isAnonymous ? 'signed-in' : 'signed-out')
     }
 
-    supabase.auth.getSession().then(({ data }) => applySession(data.session?.user))
+    supabase.auth
+      .getSession()
+      .then(({ data }) => applySession(data.session?.user))
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      applySession(session?.user)
-    })
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        applySession(session?.user)
+      }
+    )
     return () => listener.subscription.unsubscribe()
   }, [])
 

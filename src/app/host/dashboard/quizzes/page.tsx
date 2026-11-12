@@ -108,7 +108,12 @@ export default function MyQuizzesPage() {
   }
 
   const remove = async (row: Row) => {
-    if (!window.confirm(`Delete "${row.name}"? This cannot be undone.`)) return
+    if (
+      !window.confirm(
+        `Delete "${row.name}"? Its games and results will be deleted too. This cannot be undone.`
+      )
+    )
+      return
     setBusyId(row.id)
     setError(null)
     const { error: deleteError } = await supabase
@@ -138,7 +143,9 @@ export default function MyQuizzesPage() {
         </div>
       )}
       {loaded && rows.length === 0 && !error && (
-        <p className="text-gray-700">No quizzes yet. Create one to get started.</p>
+        <p className="text-gray-700">
+          No quizzes yet. Create one to get started.
+        </p>
       )}
 
       <ul className="flex flex-col gap-3">
@@ -157,7 +164,8 @@ export default function MyQuizzesPage() {
                 <h3 className="break-words font-bold text-ink">{row.name}</h3>
                 <p className="text-sm text-gray-700">
                   {row.questionCount}{' '}
-                  {row.questionCount === 1 ? 'question' : 'questions'} · {status}
+                  {row.questionCount === 1 ? 'question' : 'questions'} ·{' '}
+                  {status}
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -174,15 +182,13 @@ export default function MyQuizzesPage() {
                 >
                   Duplicate
                 </Button>
-                {!row.played && (
-                  <Button
-                    variant="secondary"
-                    onClick={() => remove(row)}
-                    disabled={busyId !== null}
-                  >
-                    Delete
-                  </Button>
-                )}
+                <Button
+                  variant="secondary"
+                  onClick={() => remove(row)}
+                  disabled={busyId !== null}
+                >
+                  Delete
+                </Button>
               </div>
             </li>
           )

@@ -39,8 +39,7 @@ export function validateDraft(
     }
     if (
       q.choices.some(
-        (c) =>
-          c.body.trim() === '' || c.body.trim().length > MAX_CHOICE_LENGTH
+        (c) => c.body.trim() === '' || c.body.trim().length > MAX_CHOICE_LENGTH
       )
     ) {
       return `Question ${n}: each choice needs 1 to ${MAX_CHOICE_LENGTH} characters.`

@@ -94,9 +94,7 @@ export default function QuizEditor({ quizSetId }: { quizSetId?: string }) {
     })
 
   const setQuestionBody = (qi: number, body: string) =>
-    setQuestions((qs) =>
-      qs.map((q, i) => (i === qi ? { ...q, body } : q))
-    )
+    setQuestions((qs) => qs.map((q, i) => (i === qi ? { ...q, body } : q)))
 
   const updateChoices = (
     qi: number,
