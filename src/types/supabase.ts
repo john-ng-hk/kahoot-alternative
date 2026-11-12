@@ -229,20 +229,31 @@ export type Database = {
           description: string | null
           id: string
           name: string
+          owner_user_id: string | null
         }
         Insert: {
           created_at?: string
           description?: string | null
           id?: string
           name: string
+          owner_user_id?: string | null
         }
         Update: {
           created_at?: string
           description?: string | null
           id?: string
           name?: string
+          owner_user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "quiz_sets_owner_user_id_fkey"
+            columns: ["owner_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -265,6 +276,15 @@ export type Database = {
           choices: Json[]
         }
         Returns: undefined
+      }
+      save_quiz_set: {
+        Args: {
+          p_id: string | null
+          p_name: string
+          p_description: string | null
+          p_questions: Json
+        }
+        Returns: string
       }
     }
     Enums: {
