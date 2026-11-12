@@ -1,3 +1,5 @@
+import { Button } from '@/components/ui/button'
+import { Notice } from '@/components/ui/notice'
 import { Participant, supabase } from '@/types/types'
 import { on } from 'events'
 import { FormEvent, useEffect, useState } from 'react'
@@ -10,6 +12,7 @@ export default function Lobby({
   onRegisterCompleted: (participant: Participant) => void
 }) {
   const [participant, setParticipant] = useState<Participant | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchParticipant = async () => {
@@ -38,7 +41,7 @@ export default function Lobby({
         .maybeSingle()
 
       if (error) {
-        return alert(error.message)
+        return setError(error.message)
       }
 
       if (participantData) {
@@ -51,8 +54,8 @@ export default function Lobby({
   }, [gameId, onRegisterCompleted])
 
   return (
-    <div className="bg-green-500 flex justify-center items-center min-h-screen">
-      <div className="bg-black p-12">
+    <div className="flex min-h-screen items-center justify-center p-4">
+      <div className="card w-full max-w-md">
         {!participant && (
           <Register
             gameId={gameId}
@@ -64,15 +67,19 @@ export default function Lobby({
         )}
 
         {participant && (
-          <div className="text-white max-w-md">
-            <h1 className="text-xl pb-4">Welcome {participant.nickname}！</h1>
-            <p>
+          <div>
+            <h1 className="pb-4 text-2xl font-bold break-words">
+              Welcome {participant.nickname}！
+            </h1>
+            <p className="text-gray-700">
               You have been registered and your nickname should show up on the
               admin screen. Please sit back and wait until the game master
               starts the game.
             </p>
           </div>
         )}
+
+        {error && <Notice>{error}</Notice>}
       </div>
     </div>
   )
@@ -85,6 +92,10 @@ function Register({
   onRegisterCompleted: (player: Participant) => void
   gameId: string
 }) {
+  const [nickname, setNickname] = useState('')
+  const [sending, setSending] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
   const onFormSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
@@ -92,6 +103,7 @@ function Register({
       return
     }
     setSending(true)
+    setError(null)
     const { data: participant, error } = await supabase
       .from('participants')
       .insert({ nickname, game_id: gameId })
@@ -101,27 +113,33 @@ function Register({
     if (error) {
       setSending(false)
 
-      return alert(error.message)
+      return setError(error.message)
     }
 
     onRegisterCompleted(participant)
   }
 
-  const [nickname, setNickname] = useState('')
-  const [sending, setSending] = useState(false)
-
   return (
     <form onSubmit={(e) => onFormSubmit(e)}>
+      <label htmlFor="nickname" className="block pb-2 font-semibold">
+        Your nickname
+      </label>
       <input
-        className="p-2 w-full border border-black text-black"
+        id="nickname"
+        className="input"
         type="text"
         onChange={(val) => setNickname(val.currentTarget.value)}
         placeholder="Nickname"
         maxLength={20}
       />
-      <button disabled={sending} className="w-full py-2 bg-green-500 mt-4">
+      {error && (
+        <div className="mt-4">
+          <Notice>{error}</Notice>
+        </div>
+      )}
+      <Button type="submit" disabled={sending} className="mt-4 w-full">
         Join
-      </button>
+      </Button>
     </form>
   )
 }

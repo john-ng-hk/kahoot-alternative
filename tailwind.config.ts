@@ -9,6 +9,16 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      colors: {
+        ink: '#0f172a',
+        accent: '#7c3aed',
+        answer: {
+          red: '#dc2626',
+          blue: '#2563eb',
+          yellow: '#fbbf24',
+          green: '#15803d',
+        },
+      },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
         'gradient-conic':
@@ -16,6 +26,8 @@ const config: Config = {
       },
     },
   },
+  // answer-{index} is built at runtime, so Tailwind cannot see it in the source
+  safelist: ['answer-0', 'answer-1', 'answer-2', 'answer-3'],
   plugins: [],
 }
 export default config

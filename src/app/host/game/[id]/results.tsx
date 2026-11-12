@@ -1,8 +1,7 @@
+import { Notice } from '@/components/ui/notice'
 import {
-  Answer,
   GameResult,
   Participant,
-  Question,
   QuizSet,
   supabase,
 } from '@/types/types'
@@ -19,6 +18,7 @@ export default function Results({
   gameId: string
 }) {
   const [gameResults, setGameResults] = useState<GameResult[]>([])
+  const [error, setError] = useState<string | null>(null)
 
   const { width, height } = useWindowSize()
 
@@ -30,7 +30,7 @@ export default function Results({
         .eq('game_id', gameId)
         .order('total_score', { ascending: false })
       if (error) {
-        return alert(error.message)
+        return setError(error.message)
       }
 
       setGameResults(data)
@@ -38,41 +38,54 @@ export default function Results({
     getResults()
   }, [gameId])
 
+  /** Competition ranking: tied players share a rank, e.g. 1, 2, 2, 4 */
+  const rankOf = (gameResult: GameResult) =>
+    1 +
+    gameResults.filter(
+      (other) => (other.total_score ?? 0) > (gameResult.total_score ?? 0)
+    ).length
+
   return (
-    <div className="min-h-screen bg-black">
-      <div className="text-center">
-        <h1 className="text-3xl my-4 py-4 px-12 bg-white inline-block rounded font-bold">
-          {quizSet.name}
-        </h1>
-      </div>
-      <div className="flex justify-center items-stretch">
-        <div>
-          {gameResults.map((gameResult, index) => (
+    <div className="min-h-screen bg-ink p-6 text-white">
+      <h1 className="mx-auto mb-6 max-w-3xl break-words text-center text-3xl font-bold">
+        {quizSet.name}
+      </h1>
+      {error && (
+        <div className="mx-auto mb-4 max-w-2xl">
+          <Notice>{error}</Notice>
+        </div>
+      )}
+      <div className="mx-auto flex max-w-2xl flex-col gap-3">
+        {gameResults.map((gameResult) => {
+          const rank = rankOf(gameResult)
+          const isTop = rank <= 3
+          return (
             <div
               key={gameResult.participant_id}
-              className={`flex justify-between items-center bg-white py-2 px-4 rounded my-4 max-w-2xl w-full ${
-                index < 3 ? 'shadow-xl font-bold' : ''
+              className={`card flex items-center gap-4 px-4 py-3 ${
+                isTop ? 'shadow-xl' : ''
               }`}
             >
-              <div className={`pr-4 ${index < 3 ? 'text-3xl' : 'text-l'}`}>
-                {index + 1}
+              <div
+                className={`w-12 text-right font-bold ${
+                  isTop ? 'text-4xl' : 'text-xl'
+                }`}
+              >
+                {rank}
               </div>
               <div
-                className={`flex-grow font-bold ${
-                  index < 3 ? 'text-5xl' : 'text-2xl'
+                className={`min-w-0 flex-grow break-words font-bold ${
+                  isTop ? 'text-4xl' : 'text-2xl'
                 }`}
               >
                 {gameResult.nickname}
               </div>
-              <div className="pl-2">
-                <span className="text-xl font-bold">
-                  {gameResult.total_score}
-                </span>
-                <span>pts</span>
+              <div className="whitespace-nowrap text-lg">
+                {gameResult.total_score} pts
               </div>
             </div>
-          ))}
-        </div>
+          )
+        })}
       </div>
       <Confetti width={width} height={height} recycle={true} />
     </div>

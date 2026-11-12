@@ -2,6 +2,8 @@ import { TIME_TIL_CHOICE_REVEAL } from '@/constants'
 import { Answer, Participant, Question, supabase } from '@/types/types'
 import { useEffect, useRef, useState } from 'react'
 import { CountdownCircleTimer } from 'react-countdown-circle-timer'
+import { Button } from '@/components/ui/button'
+import { Notice } from '@/components/ui/notice'
 
 export default function Quiz({
   question: question,
@@ -15,6 +17,8 @@ export default function Quiz({
   participants: Participant[]
 }) {
   const [isAnswerRevealed, setIsAnswerRevealed] = useState(false)
+
+  const [error, setError] = useState<string | null>(null)
 
   const [hasShownChoices, setHasShownChoices] = useState(false)
 
@@ -40,7 +44,7 @@ export default function Quiz({
       .update(updateData)
       .eq('id', gameId)
     if (error) {
-      return alert(error.message)
+      return setError(error.message)
     }
   }
 
@@ -58,6 +62,7 @@ export default function Quiz({
     setIsAnswerRevealed(false)
     setHasShownChoices(false)
     setAnswers([])
+    setError(null)
 
     setTimeout(() => {
       setHasShownChoices(true)
@@ -94,20 +99,22 @@ export default function Quiz({
   }, [question.id])
 
   return (
-    <div className="h-screen flex flex-col items-stretch bg-slate-900 relative">
+    <div className="h-screen flex flex-col items-stretch bg-ink text-white relative">
+      {error && (
+        <div className="px-4 pt-4">
+          <Notice>{error}</Notice>
+        </div>
+      )}
       <div className="absolute right-4 top-4">
         {isAnswerRevealed && (
-          <button
-            className="p-2 bg-white text-black rounded hover:bg-gray-200"
-            onClick={getNextQuestion}
-          >
+          <Button variant="secondary" onClick={getNextQuestion}>
             Next
-          </button>
+          </Button>
         )}
       </div>
 
-      <div className="text-center">
-        <h2 className="pb-4 text-3xl bg-white font-bold mx-24 my-12 p-4 rounded inline-block">
+      <div className="px-8 pt-12 pb-6 text-center">
+        <h2 className="mx-auto max-w-5xl break-words rounded-xl bg-white p-6 text-3xl font-bold text-ink">
           {question.body}
         </h2>
       </div>
@@ -152,28 +159,13 @@ export default function Quiz({
                         (answers.length || 1)
                       }%`,
                     }}
-                    className={`absolute bottom-0 left-0 right-0 mb-1 rounded-t ${
-                      index === 0
-                        ? 'bg-red-500'
-                        : index === 1
-                        ? 'bg-blue-500'
-                        : index === 2
-                        ? 'bg-yellow-500'
-                        : 'bg-green-500'
-                    }`}
+                    className={`absolute bottom-0 left-0 right-0 mb-1 rounded-t answer-${index}`}
                   ></div>
                 </div>
                 <div
-                  className={`mt-1 text-white text-lg text-center py-2 rounded-b ${
-                    index === 0
-                      ? 'bg-red-500'
-                      : index === 1
-                      ? 'bg-blue-500'
-                      : index === 2
-                      ? 'bg-yellow-500'
-                      : 'bg-green-500'
-                  }`}
+                  className={`mt-1 text-lg text-center py-2 rounded-b answer-${index}`}
                 >
+                  {String.fromCharCode(65 + index)} ·{' '}
                   {
                     answers.filter((answer) => answer.choice_id === choice.id)
                       .length
@@ -186,24 +178,23 @@ export default function Quiz({
       </div>
 
       {hasShownChoices && (
-        <div className="flex justify-between flex-wrap p-4">
+        <div className="grid grid-cols-2 gap-3 p-4">
           {question.choices.map((choice, index) => (
-            <div key={choice.id} className="w-1/2 p-1">
+            <div
+              key={choice.id}
+              className={
+                question.choices.length % 2 === 1 &&
+                index === question.choices.length - 1
+                  ? 'col-span-2'
+                  : ''
+              }
+            >
               <div
-                className={`px-4 py-6 w-full text-2xl rounded font-bold text-white flex justify-between
-                ${
-                  index === 0
-                    ? 'bg-red-500'
-                    : index === 1
-                    ? 'bg-blue-500'
-                    : index === 2
-                    ? 'bg-yellow-500'
-                    : 'bg-green-500'
-                }
-                ${isAnswerRevealed && !choice.is_correct ? 'opacity-60' : ''}
-               `}
+                className={`px-4 py-6 w-full text-2xl rounded font-bold flex justify-between answer-${index} ${
+                  isAnswerRevealed && !choice.is_correct ? 'opacity-60' : ''
+                }`}
               >
-                <div>{choice.body}</div>
+                <div className="min-w-0 break-words">{choice.body}</div>
                 {isAnswerRevealed && (
                   <div>
                     {choice.is_correct && (

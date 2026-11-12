@@ -2,6 +2,33 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer components {
+  .btn-primary {
+    @apply inline-flex min-h-[44px] items-center justify-center rounded-lg bg-accent px-5 py-3 font-semibold text-white hover:bg-violet-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:opacity-50;
+  }
+  .btn-secondary {
+    @apply inline-flex min-h-[44px] items-center justify-center rounded-lg border border-gray-300 bg-white px-5 py-3 font-semibold text-ink hover:bg-gray-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:opacity-50;
+  }
+  .card {
+    @apply rounded-xl bg-white p-6 text-ink shadow-md;
+  }
+  .input {
+    @apply min-h-[44px] w-full rounded-lg border border-gray-300 px-3 py-2 text-ink;
+  }
+  .answer-0 {
+    @apply bg-answer-red text-white;
+  }
+  .answer-1 {
+    @apply bg-answer-blue text-white;
+  }
+  .answer-2 {
+    @apply bg-answer-yellow text-ink;
+  }
+  .answer-3 {
+    @apply bg-answer-green text-white;
+  }
+}
+
 body {
     padding: 0;
     /* background-color: black;

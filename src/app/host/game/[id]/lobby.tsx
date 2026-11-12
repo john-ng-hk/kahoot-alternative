@@ -1,3 +1,5 @@
+import { Button } from '@/components/ui/button'
+import { Notice } from '@/components/ui/notice'
 import { Participant, supabase } from '@/types/types'
 import { useQRCode } from 'next-qrcode'
 import { useEffect, useState } from 'react'
@@ -14,40 +16,44 @@ export default function Lobby({
   const [origin, setOrigin] = useState('')
   useEffect(() => setOrigin(window.location.origin), [])
 
+  const [error, setError] = useState<string | null>(null)
+
   const onClickStartGame = async () => {
     const { data, error } = await supabase
       .from('games')
       .update({ phase: 'quiz' })
       .eq('id', gameId)
     if (error) {
-      return alert(error.message)
+      return setError(error.message)
     }
   }
 
   return (
-    <div className="flex justify-center items-center min-h-screen">
-      <div className="flex justify-between m-auto bg-black p-12">
-        <div className="w-96">
-          <div className="flex justify-start flex-wrap pb-4">
-            {participants.map((participant) => (
-              <div
-                className="text-xl m-2 p-2 bg-green-500"
-                key={participant.id}
-              >
-                {participant.nickname}
-              </div>
-            ))}
+    <div className="min-h-screen bg-ink text-white flex items-center justify-center p-6">
+      <div className="grid w-full max-w-5xl items-start gap-8 md:grid-cols-2">
+        <div className="flex flex-col gap-6">
+          <h1 className="text-3xl font-bold">
+            Players ({participants.length})
+          </h1>
+          <div className="max-h-[60vh] overflow-y-auto">
+            <div className="flex flex-wrap gap-3">
+              {participants.map((participant) => (
+                <div
+                  className="rounded-full bg-accent px-4 py-2 text-lg break-words"
+                  key={participant.id}
+                >
+                  {participant.nickname}
+                </div>
+              ))}
+            </div>
           </div>
-
-          <button
-            className="mx-auto bg-white py-4 px-12 block text-black"
-            onClick={onClickStartGame}
-          >
+          {error && <Notice>{error}</Notice>}
+          <Button className="self-start text-xl" onClick={onClickStartGame}>
             Start Game
-          </button>
+          </Button>
         </div>
-        <div className="pl-4">
-          {/* <img src="/qr.png" alt="QR code" /> */}
+        <div className="card flex flex-col items-center gap-4">
+          <h2 className="text-2xl font-bold text-ink">Scan to join</h2>
           {origin && (
             <Canvas
               text={`${origin}/game/${gameId}`}

@@ -10,6 +10,7 @@ import {
   supabase,
 } from '@/types/types'
 import { useEffect, useState } from 'react'
+import { Notice } from '@/components/ui/notice'
 import Lobby from './lobby'
 import Quiz from './quiz'
 import Results from './results'
@@ -31,6 +32,8 @@ export default function Home({
 
   const [participants, setParticipants] = useState<Participant[]>([])
 
+  const [error, setError] = useState<string | null>(null)
+
   const [quizSet, setQuizSet] = useState<QuizSet>()
 
   useEffect(() => {
@@ -42,7 +45,7 @@ export default function Home({
         .single()
       if (gameError) {
         console.error(gameError.message)
-        alert('Error getting game data')
+        setError('Error getting game data')
         return
       }
       const { data, error } = await supabase
@@ -78,7 +81,7 @@ export default function Home({
         .single()
 
       if (gameError) {
-        alert(gameError.message)
+        setError(gameError.message)
         console.error(gameError)
         return
       }
@@ -132,6 +135,11 @@ export default function Home({
 
   return (
     <main className="bg-green-600 min-h-screen">
+      {error && (
+        <div className="p-4">
+          <Notice>{error}</Notice>
+        </div>
+      )}
       {currentScreen == AdminScreens.lobby && (
         <Lobby participants={participants} gameId={gameId}></Lobby>
       )}

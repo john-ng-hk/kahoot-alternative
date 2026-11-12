@@ -64,16 +64,16 @@ export default function RootLayout({
 }) {
   return (
     <>
-      <header className="h-16 px-2 flex justify-between border-b border-gray-200 items-center">
-        <h1>SupaQuiz</h1>
+      <header className="h-16 px-4 flex justify-between border-b border-gray-200 items-center text-ink">
+        <h1 className="text-xl font-bold">SupaQuiz</h1>
       </header>
       <div className="flex">
-        <nav className="border-r border-r-gray-200">
+        <nav className="border-r border-r-gray-200 text-ink">
           <ul>
             {menuItems.map((item) => (
               <li key={item.href} className="">
                 <Link
-                  className="flex items-center h-12 w-52 hover:bg-gray-100"
+                  className="flex items-center min-h-[44px] w-52 hover:bg-gray-100"
                   href={item.href}
                 >
                   <div className="px-2">{item.icon}</div>

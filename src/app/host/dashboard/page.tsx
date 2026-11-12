@@ -1,10 +1,14 @@
 'use client'
 
+import { Button } from '@/components/ui/button'
+import { Notice } from '@/components/ui/notice'
 import { QuizSet, supabase } from '@/types/types'
 import { useEffect, useState } from 'react'
 
 export default function Home() {
   const [quizSet, setQuizSet] = useState<QuizSet[]>([])
+  const [error, setError] = useState<string | null>(null)
+  const [loaded, setLoaded] = useState(false)
 
   useEffect(() => {
     const getQuizSets = async () => {
@@ -12,8 +16,9 @@ export default function Home() {
         .from('quiz_sets')
         .select(`*, questions(*, choices(*))`)
         .order('created_at', { ascending: false })
+      setLoaded(true)
       if (error) {
-        alert('Failed to fetch quiz sets')
+        setError('Could not load quiz sets. Refresh the page to try again.')
         return
       }
       setQuizSet(data)
@@ -38,7 +43,7 @@ export default function Home() {
       .single()
     if (error) {
       console.error(error)
-      alert('Failed to start game')
+      setError('Could not start the game. Try again.')
       return
     }
 
@@ -47,29 +52,39 @@ export default function Home() {
   }
 
   return (
-    <>
-      {quizSet.map((quizSet) => (
-        <div
-          key={quizSet.id}
-          className="flex justify-start shadow my-4 mx-2 rounded"
-        >
-          <img className="h-28" src="/default.png" alt="default quiz image" />
-          <div className="p-2 flex flex-col justify-between items-stretch flex-grow">
-            <h2 className="font-bold">{quizSet.name}</h2>
-            <div className="flex justify-between items-end">
-              <div>{quizSet.questions.length} questions</div>
-              <div>
-                <button
-                  className="bg-green-500 text-white py-1 px-4 rounded"
+    <div className="max-w-4xl mx-auto p-4">
+      <h1 className="text-2xl font-bold text-ink mb-4">Quiz sets</h1>
+      {error && <Notice>{error}</Notice>}
+      {loaded && quizSet.length === 0 && !error && (
+        <p className="text-gray-700">No quiz sets yet.</p>
+      )}
+      <div className="flex flex-col gap-4">
+        {quizSet.map((quizSet) => (
+          <div key={quizSet.id} className="card flex gap-4 p-4">
+            <img
+              className="h-28 rounded"
+              src="/default.png"
+              alt="default quiz image"
+            />
+            <div className="flex flex-grow flex-col justify-between gap-2">
+              <h2 className="text-lg font-bold break-words">{quizSet.name}</h2>
+              <div className="flex flex-wrap items-end justify-between gap-2">
+                <div className="text-gray-700">
+                  {quizSet.questions.length} questions
+                </div>
+                <Button
+                  disabled={quizSet.questions.length === 0}
                   onClick={() => startGame(quizSet.id)}
                 >
-                  Start Game
-                </button>
+                  {quizSet.questions.length === 0
+                    ? 'No questions yet'
+                    : 'Start Game'}
+                </Button>
               </div>
             </div>
           </div>
-        </div>
-      ))}
-    </>
+        ))}
+      </div>
+    </div>
   )
 }

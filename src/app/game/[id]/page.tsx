@@ -117,7 +117,7 @@ export default function Home({
   }, [gameId])
 
   return (
-    <main className="bg-green-500 min-h-screen">
+    <main className="bg-ink min-h-screen text-white">
       {currentScreen == Screens.lobby && (
         <Lobby
           onRegisterCompleted={onRegisterCompleted}
@@ -141,10 +141,12 @@ export default function Home({
 
 function Results({ participant }: { participant: Participant }) {
   return (
-    <div className="flex justify-center items-center min-h-screen text-center">
-      <div className="p-8 bg-black text-white rounded-lg">
-        <h2 className="text-2xl pb-4">Hey {participant.nickname}！</h2>
-        <p>Thanks for playing 🎉</p>
+    <div className="flex min-h-screen items-center justify-center p-4">
+      <div className="card w-full max-w-md text-center">
+        <h2 className="pb-4 text-2xl font-bold break-words">
+          Hey {participant.nickname}！
+        </h2>
+        <p className="text-gray-700">Thanks for playing 🎉</p>
       </div>
     </div>
   )

@@ -1,4 +1,5 @@
 import { QUESTION_ANSWER_TIME, TIME_TIL_CHOICE_REVEAL } from '@/constants'
+import { Notice } from '@/components/ui/notice'
 import { Choice, Question, supabase } from '@/types/types'
 import { useState, useEffect } from 'react'
 import { ColorFormat, CountdownCircleTimer } from 'react-countdown-circle-timer'
@@ -20,9 +21,12 @@ export default function Quiz({
 
   const [questionStartTime, setQuestionStartTime] = useState(Date.now())
 
+  const [error, setError] = useState<string | null>(null)
+
   useEffect(() => {
     setChosenChoice(null)
     setHasShownChoices(false)
+    setError(null)
   }, [question.id])
 
   const answer = async (choice: Choice) => {
@@ -47,17 +51,22 @@ export default function Quiz({
     })
     if (error) {
       setChosenChoice(null)
-      alert(error.message)
+      setError(error.message)
     }
   }
 
   return (
-    <div className="h-screen flex flex-col items-stretch bg-slate-900 relative">
-      <div className="text-center">
-        <h2 className="pb-4 text-2xl bg-white font-bold mx-4 my-12 p-4 rounded inline-block md:text-3xl md:px-24">
+    <div className="h-screen flex flex-col items-stretch bg-ink text-white relative">
+      <div className="px-4 pt-8 pb-4 text-center">
+        <h2 className="mx-auto max-w-3xl break-words rounded-xl bg-white p-6 text-2xl font-bold text-ink md:text-3xl">
           {question.body}
         </h2>
       </div>
+      {error && (
+        <div className="px-4">
+          <Notice>{error}</Notice>
+        </div>
+      )}
 
       {!isAnswerRevealed && chosenChoice && (
         <div className="flex-grow flex justify-center items-center">
@@ -88,26 +97,30 @@ export default function Quiz({
       {hasShownChoices && !isAnswerRevealed && !chosenChoice && (
         <div className="flex-grow flex flex-col items-stretch">
           <div className="flex-grow"></div>
-          <div className="flex justify-between flex-wrap p-4">
+          <div className="grid grid-cols-2 gap-3 p-4">
             {question.choices.map((choice, index) => (
-              <div key={choice.id} className="w-1/2 p-1">
+              <div
+                key={choice.id}
+                className={
+                  question.choices.length % 2 === 1 &&
+                  index === question.choices.length - 1
+                    ? 'col-span-2'
+                    : ''
+                }
+              >
                 <button
                   onClick={() => answer(choice)}
                   disabled={chosenChoice !== null || isAnswerRevealed}
-                  className={`px-4 py-6 w-full text-xl rounded text-white flex justify-between md:text-2xl md:font-bold
-              ${
-                index === 0
-                  ? 'bg-red-500'
-                  : index === 1
-                  ? 'bg-blue-500'
-                  : index === 2
-                  ? 'bg-yellow-500'
-                  : 'bg-green-500'
-              }
-              ${isAnswerRevealed && !choice.is_correct ? 'opacity-60' : ''}
-             `}
+                  className={`min-h-[44px] w-full rounded px-4 py-6 text-xl font-bold flex items-center justify-between gap-3 answer-${index} ${
+                    isAnswerRevealed && !choice.is_correct ? 'opacity-60' : ''
+                  }`}
                 >
-                  <div>{choice.body}</div>
+                  <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-black/20 font-bold">
+                    {String.fromCharCode(65 + index)}
+                  </span>
+                  <div className="min-w-0 flex-grow break-words text-left">
+                    {choice.body}
+                  </div>
                   {isAnswerRevealed && (
                     <div>
                       {choice.is_correct && (
@@ -158,7 +171,7 @@ export default function Quiz({
           </h2>
           <div
             className={`text-white rounded-full p-4  ${
-              chosenChoice?.is_correct ? 'bg-green-500' : 'bg-red-500'
+              chosenChoice?.is_correct ? 'bg-answer-green' : 'bg-answer-red'
             }`}
           >
             {chosenChoice?.is_correct && (
@@ -197,8 +210,8 @@ export default function Quiz({
         </div>
       )}
 
-      <div className="flex text-white py-2 px-4 items-center bg-black">
-        <div className="text-2xl">
+      <div className="flex items-center bg-black px-4 py-2 text-lg text-white">
+        <div>
           {question.order + 1}/{questionCount}
         </div>
       </div>
