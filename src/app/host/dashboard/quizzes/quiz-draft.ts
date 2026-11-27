@@ -3,6 +3,9 @@ export const MAX_CHOICE_LENGTH = 100
 export const MIN_CHOICES = 2
 export const MAX_CHOICES = 4
 
+/** Characters as Postgres length() counts them: an emoji is 1, not 2 UTF-16 units */
+export const charCount = (text: string) => Array.from(text).length
+
 export type DraftChoice = { body: string; is_correct: boolean }
 export type DraftQuestion = { body: string; choices: DraftChoice[] }
 
@@ -31,7 +34,7 @@ export function validateDraft(
     const n = i + 1
     const q = questions[i]
     const body = q.body.trim()
-    if (body === '' || body.length > MAX_QUESTION_LENGTH) {
+    if (body === '' || charCount(body) > MAX_QUESTION_LENGTH) {
       return `Question ${n}: enter 1 to ${MAX_QUESTION_LENGTH} characters.`
     }
     if (q.choices.length < MIN_CHOICES || q.choices.length > MAX_CHOICES) {
@@ -39,7 +42,7 @@ export function validateDraft(
     }
     if (
       q.choices.some(
-        (c) => c.body.trim() === '' || c.body.trim().length > MAX_CHOICE_LENGTH
+        (c) => c.body.trim() === '' || charCount(c.body.trim()) > MAX_CHOICE_LENGTH
       )
     ) {
       return `Question ${n}: each choice needs 1 to ${MAX_CHOICE_LENGTH} characters.`

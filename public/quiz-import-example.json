@@ -1,0 +1,40 @@
+{
+  "quizzes": [
+    {
+      "name": "General knowledge",
+      "description": "Three easy questions to try the import.",
+      "questions": [
+        {
+          "body": "What is the capital of Hong Kong?",
+          "choices": ["Hong Kong has no capital", "Kowloon", "Victoria", "Central"],
+          "correct": 0
+        },
+        {
+          "body": "How many days are in a leap year?",
+          "choices": ["365", "366", "367"],
+          "correct": 1
+        },
+        {
+          "body": "Which AWS service stores objects?",
+          "choices": ["Amazon S3", "Amazon RDS"],
+          "correct": 0
+        }
+      ]
+    },
+    {
+      "name": "Maths warm-up",
+      "questions": [
+        {
+          "body": "What is 7 x 8?",
+          "choices": ["54", "56", "58", "64"],
+          "correct": 1
+        },
+        {
+          "body": "What is 15% of 200?",
+          "choices": ["15", "20", "30"],
+          "correct": 2
+        }
+      ]
+    }
+  ]
+}

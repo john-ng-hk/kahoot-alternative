@@ -132,9 +132,17 @@ export default function MyQuizzesPage() {
     <div className="max-w-3xl">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
         <h2 className="text-2xl font-bold text-ink">My quizzes</h2>
-        <Link href="/host/dashboard/quizzes/new" className="btn-primary">
-          New quiz
-        </Link>
+        <div className="flex gap-2">
+          <Link
+            href="/host/dashboard/quizzes/import"
+            className="btn-secondary"
+          >
+            Import
+          </Link>
+          <Link href="/host/dashboard/quizzes/new" className="btn-primary">
+            New quiz
+          </Link>
+        </div>
       </div>
 
       {error && (

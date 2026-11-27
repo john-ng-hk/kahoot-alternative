@@ -12,6 +12,7 @@ import {
   DraftQuestion,
   MAX_CHOICES,
   MAX_QUESTION_LENGTH,
+  charCount,
   MIN_CHOICES,
   draftQuestions,
   validateDraft,
@@ -253,7 +254,7 @@ export default function QuizEditor({ quizSetId }: { quizSetId?: string }) {
                 onChange={(e) => setQuestionBody(qi, e.target.value)}
               />
               <span className="text-sm text-gray-700">
-                {q.body.length}/{MAX_QUESTION_LENGTH}
+                {charCount(q.body)}/{MAX_QUESTION_LENGTH}
               </span>
             </label>
 

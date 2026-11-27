@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { CountdownCircleTimer } from 'react-countdown-circle-timer'
 import { Button } from '@/components/ui/button'
 import { Notice } from '@/components/ui/notice'
+import Scoreboard from './scoreboard'
 
 export default function Quiz({
   question: question,
@@ -22,13 +23,22 @@ export default function Quiz({
 
   const [hasShownChoices, setHasShownChoices] = useState(false)
 
+  const [showScoreboard, setShowScoreboard] = useState(false)
+
   const [answers, setAnswers] = useState<Answer[]>([])
 
   const answerStateRef = useRef<Answer[]>()
 
+  /** Players who answered this question. Updated in the event handler itself, because answers can arrive in the same tick, before a render updates answerStateRef. */
+  const answeredRef = useRef(new Set<string>())
+
+  const participantCountRef = useRef(participants.length)
+  participantCountRef.current = participants.length
+
   answerStateRef.current = answers
 
   const getNextQuestion = async () => {
+    setError(null)
     var updateData
     if (questionCount == question.order + 1) {
       updateData = { phase: 'result' }
@@ -48,6 +58,14 @@ export default function Quiz({
     }
   }
 
+  const isLastQuestion = questionCount == question.order + 1
+
+  /** The scoreboard sits between reveal and the next question; the last question goes straight to results */
+  const onNext = () => {
+    if (isLastQuestion) getNextQuestion()
+    else setShowScoreboard(true)
+  }
+
   const onTimeUp = async () => {
     setIsAnswerRevealed(true)
     await supabase
@@ -61,7 +79,9 @@ export default function Quiz({
   useEffect(() => {
     setIsAnswerRevealed(false)
     setHasShownChoices(false)
+    setShowScoreboard(false)
     setAnswers([])
+    answeredRef.current = new Set()
     setError(null)
 
     setTimeout(() => {
@@ -79,14 +99,13 @@ export default function Quiz({
           filter: `question_id=eq.${question.id}`,
         },
         (payload) => {
+          const answer = payload.new as Answer
           setAnswers((currentAnswers) => {
-            return [...currentAnswers, payload.new as Answer]
+            return [...currentAnswers, answer]
           })
 
-          if (
-            (answerStateRef.current?.length ?? 0) + 1 ===
-            participants.length
-          ) {
+          answeredRef.current.add(answer.participant_id)
+          if (answeredRef.current.size >= participantCountRef.current) {
             onTimeUp()
           }
         }
@@ -98,6 +117,17 @@ export default function Quiz({
     }
   }, [question.id])
 
+  if (showScoreboard) {
+    return (
+      <Scoreboard
+        gameId={gameId}
+        questionId={question.id}
+        onContinue={getNextQuestion}
+        error={error}
+      />
+    )
+  }
+
   return (
     <div className="h-screen flex flex-col items-stretch bg-ink text-white relative">
       {error && (
@@ -107,7 +137,7 @@ export default function Quiz({
       )}
       <div className="absolute right-4 top-4">
         {isAnswerRevealed && (
-          <Button variant="secondary" onClick={getNextQuestion}>
+          <Button variant="secondary" onClick={onNext}>
             Next
           </Button>
         )}
