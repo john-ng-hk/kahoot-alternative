@@ -32,12 +32,14 @@ export default function QuizEditor({ quizSetId }: { quizSetId?: string }) {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [questions, setQuestions] = useState<DraftQuestion[]>([])
-  const [hasGames, setHasGames] = useState(false)
+  const [gameCount, setGameCount] = useState(0)
+  const [deletingGames, setDeletingGames] = useState(false)
   const [notOwner, setNotOwner] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
   const [saving, setSaving] = useState(false)
 
+  const hasGames = gameCount > 0
   const readOnly = hasGames || notOwner
 
   useEffect(() => {
@@ -72,7 +74,7 @@ export default function QuizEditor({ quizSetId }: { quizSetId?: string }) {
       setName(data.name)
       setDescription(data.description ?? '')
       setQuestions(draftQuestions(data.questions))
-      setHasGames((count ?? 0) > 0)
+      setGameCount(count ?? 0)
       setNotOwner(data.owner_user_id !== user?.id)
       setLoading(false)
     }
@@ -128,6 +130,31 @@ export default function QuizEditor({ quizSetId }: { quizSetId?: string }) {
         ? choices.filter((_, j) => j !== ci)
         : choices
     )
+
+  /** Owners can remove every game of the quiz (finished or not, whoever hosted it) to unlock editing. Results go with them. */
+  const deleteGames = async () => {
+    if (!quizSetId) return
+    if (
+      !window.confirm(
+        `Delete ${gameCount} ${gameCount === 1 ? 'game' : 'games'} and their results? This cannot be undone.`
+      )
+    )
+      return
+    setError(null)
+    setDeletingGames(true)
+    const { data, error } = await supabase
+      .from('games')
+      .delete()
+      .eq('quiz_set_id', quizSetId)
+      .select('id')
+    setDeletingGames(false)
+    // RLS hides games the user may not delete: zero rows and no error
+    if (error || !data || data.length === 0) {
+      setError(error?.message ?? 'Could not delete the games. Try again.')
+      return
+    }
+    setGameCount(0)
+  }
 
   const save = async () => {
     setError(null)
@@ -188,10 +215,24 @@ export default function QuizEditor({ quizSetId }: { quizSetId?: string }) {
         </div>
       )}
       {hasGames && (
-        <p className="mb-4 rounded-lg bg-gray-100 px-4 py-2 text-ink">
-          This quiz has games, so it cannot be changed. Duplicate it from My
-          quizzes to make changes.
-        </p>
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg bg-gray-100 px-4 py-2 text-ink">
+          <p>
+            This quiz has {gameCount} {gameCount === 1 ? 'game' : 'games'}, so
+            it cannot be changed.{' '}
+            {notOwner
+              ? 'Duplicate it from My quizzes to make changes.'
+              : 'Delete the games to edit it, or duplicate it from My quizzes.'}
+          </p>
+          {!notOwner && (
+            <Button
+              variant="secondary"
+              onClick={deleteGames}
+              disabled={deletingGames}
+            >
+              Delete games
+            </Button>
+          )}
+        </div>
       )}
       {notOwner && !hasGames && (
         <p className="mb-4 rounded-lg bg-gray-100 px-4 py-2 text-ink">
