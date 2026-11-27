@@ -40,6 +40,20 @@ Access the project root at / to join as a player.
 
 Access /host to join as a host.
 
+## Import quizzes
+
+Hosts can upload a JSON file at `/host/dashboard/quizzes/import`. See `public/quiz-import-example.json` for the format.
+
+## Tests
+
+Pure logic has `node:test` tests. Run one from inside its folder, for example:
+
+`cd src/app/host/dashboard/quizzes && npx --yes tsx --test ./import-format.test.ts`
+
+## Email sign-in
+
+Hosts sign in with an emailed code or link. Setup is in [docs/email-sign-in.md](docs/email-sign-in.md).
+
 ## Generate Types
 
 `supabase gen types typescript --local --schema public > src/types/supabase.ts`
