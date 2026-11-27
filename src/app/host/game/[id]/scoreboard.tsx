@@ -70,7 +70,15 @@ function Row({
         opacity: visible ? 1 : 0,
       }}
     >
-      <div className="w-10 text-right text-2xl font-bold">{row.rank}</div>
+      <div
+        className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-xl font-bold ${
+          row.rank <= 3
+            ? 'bg-brand text-white'
+            : 'border-2 border-gray-300 text-ink'
+        }`}
+      >
+        {row.rank}
+      </div>
       <div className="min-w-0 flex-grow truncate text-2xl font-bold">
         {row.nickname}
       </div>
@@ -170,8 +178,8 @@ export default function Scoreboard({
   }, [rows])
 
   return (
-    <div className="flex min-h-screen flex-col items-center bg-ink p-6 text-white">
-      <h1 className="mb-6 text-3xl font-bold">Top 5</h1>
+    <div className="flex min-h-screen flex-col items-center bg-ink bg-[radial-gradient(ellipse_at_top,rgb(var(--brand-primary)/0.3),transparent_60%)] p-6 pt-24 text-white">
+      <h1 className="mb-6 text-4xl font-bold">Top 5</h1>
       {(continueError ?? error) && (
         <div className="mb-4 w-full max-w-2xl">
           <Notice>{continueError ?? error}</Notice>
@@ -193,7 +201,9 @@ export default function Scoreboard({
         ))}
       </div>
       <div className="mt-8">
-        <Button onClick={onContinue}>Continue</Button>
+        <Button className="px-8 text-lg" onClick={onContinue}>
+          Continue
+        </Button>
       </div>
     </div>
   )

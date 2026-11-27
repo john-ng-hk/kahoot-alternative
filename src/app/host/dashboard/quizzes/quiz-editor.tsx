@@ -176,7 +176,7 @@ export default function QuizEditor({ quizSetId }: { quizSetId?: string }) {
         </h2>
         <Link
           href="/host/dashboard/quizzes"
-          className="inline-flex min-h-[44px] items-center text-accent underline"
+          className="inline-flex min-h-[44px] items-center text-brand underline"
         >
           Back to my quizzes
         </Link>

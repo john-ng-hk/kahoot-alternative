@@ -11,6 +11,7 @@ import {
 } from '@/types/types'
 import { useEffect, useState } from 'react'
 import { Notice } from '@/components/ui/notice'
+import { EndGameButton } from '@/components/end-game-button'
 import Lobby from './lobby'
 import Quiz from './quiz'
 import Results from './results'
@@ -134,30 +135,47 @@ export default function Home({
   const [currentQuestionSequence, setCurrentQuestionSequence] = useState(0)
 
   return (
-    <main className="bg-green-600 min-h-screen">
+    <main className="bg-ink min-h-screen">
       {error && (
-        <div className="p-4">
+        <div className="px-4 pb-4 pt-16">
           <Notice>{error}</Notice>
         </div>
+      )}
+      {currentScreen !== AdminScreens.result && (
+        <EndGameButton
+          gameId={gameId}
+          className="fixed left-4 top-4 z-20"
+        />
       )}
       {currentScreen == AdminScreens.lobby && (
         <Lobby participants={participants} gameId={gameId}></Lobby>
       )}
-      {currentScreen == AdminScreens.quiz && (
-        <Quiz
-          question={quizSet!.questions![currentQuestionSequence]}
-          questionCount={quizSet!.questions!.length}
-          gameId={gameId}
-          participants={participants}
-        ></Quiz>
-      )}
-      {currentScreen == AdminScreens.result && (
+      {currentScreen == AdminScreens.quiz &&
+        quizSet?.questions?.[currentQuestionSequence] && (
+          <Quiz
+            question={quizSet.questions[currentQuestionSequence]}
+            questionCount={quizSet.questions.length}
+            gameId={gameId}
+            participants={participants}
+          ></Quiz>
+        )}
+      {currentScreen == AdminScreens.result && quizSet && (
         <Results
-          participants={participants!}
-          quizSet={quizSet!}
+          participants={participants}
+          quizSet={quizSet}
           gameId={gameId}
         ></Results>
       )}
+      {currentScreen != AdminScreens.lobby && !quizSet && (
+        <p className="p-6 pt-24 text-white">Loading game</p>
+      )}
+      {currentScreen == AdminScreens.quiz &&
+        quizSet &&
+        !quizSet.questions?.[currentQuestionSequence] && (
+          <p className="p-6 pt-24 text-white">
+            This quiz has no question at this position.
+          </p>
+        )}
     </main>
   )
 }

@@ -6,6 +6,12 @@ import { Button } from '@/components/ui/button'
 import { Notice } from '@/components/ui/notice'
 import Scoreboard from './scoreboard'
 
+/** Adds answers that are not in the list yet (an answer can arrive both by realtime and by a read) */
+const mergeAnswers = (current: Answer[], incoming: Answer[]) => [
+  ...current,
+  ...incoming.filter((a) => !current.some((c) => c.id === a.id)),
+]
+
 export default function Quiz({
   question: question,
   questionCount: questionCount,
@@ -100,9 +106,9 @@ export default function Quiz({
         },
         (payload) => {
           const answer = payload.new as Answer
-          setAnswers((currentAnswers) => {
-            return [...currentAnswers, answer]
-          })
+          setAnswers((currentAnswers) =>
+            mergeAnswers(currentAnswers, [answer])
+          )
 
           answeredRef.current.add(answer.participant_id)
           if (answeredRef.current.size >= participantCountRef.current) {
@@ -112,7 +118,34 @@ export default function Quiz({
       )
       .subscribe()
 
+    /** After a resume or refresh the host has missed earlier answers and a reveal; read them back */
+    let cancelled = false
+    const loadExisting = async () => {
+      const [{ data: game }, { data: existing }] = await Promise.all([
+        supabase
+          .from('games')
+          .select('is_answer_revealed')
+          .eq('id', gameId)
+          .single(),
+        // answers has no game id: join through participants so other games on the same quiz are left out
+        supabase
+          .from('answers')
+          .select('*, participants!inner(game_id)')
+          .eq('question_id', question.id)
+          .eq('participants.game_id', gameId),
+      ])
+      if (cancelled) return
+      if (existing?.length) {
+        const rows: Answer[] = existing.map(({ participants, ...a }) => a)
+        rows.forEach((a) => answeredRef.current.add(a.participant_id))
+        setAnswers((current) => mergeAnswers(current, rows))
+      }
+      if (game?.is_answer_revealed) setIsAnswerRevealed(true)
+    }
+    loadExisting()
+
     return () => {
+      cancelled = true
       supabase.removeChannel(channel)
     }
   }, [question.id])
@@ -128,81 +161,94 @@ export default function Quiz({
     )
   }
 
+  const countFor = (choiceId: string) =>
+    answers.filter((answer) => answer.choice_id === choiceId).length
+
   return (
-    <div className="h-screen flex flex-col items-stretch bg-ink text-white relative">
+    <div className="relative flex min-h-screen flex-col items-stretch bg-ink text-white">
       {error && (
-        <div className="px-4 pt-4">
+        <div className="px-4 pt-16">
           <Notice>{error}</Notice>
         </div>
       )}
-      <div className="absolute right-4 top-4">
+      <div className="absolute right-4 top-4 z-10">
         {isAnswerRevealed && (
-          <Button variant="secondary" onClick={onNext}>
+          <Button className="px-8 text-lg" onClick={onNext}>
             Next
           </Button>
         )}
       </div>
 
-      <div className="px-8 pt-12 pb-6 text-center">
-        <h2 className="mx-auto max-w-5xl break-words rounded-xl bg-white p-6 text-3xl font-bold text-ink">
+      <div className="px-8 pb-4 pt-20 text-center">
+        <h2 className="mx-auto max-w-5xl break-words rounded-xl border-b-8 border-brand bg-white p-6 text-3xl font-bold text-ink shadow-lg md:text-4xl">
           {question.body}
         </h2>
       </div>
 
-      <div className="flex-grow text-white px-8">
+      <div className="flex-grow px-8 text-white">
+        {!hasShownChoices && (
+          <p className="pt-8 text-center text-2xl text-white/80 motion-safe:animate-pulse-soft">
+            Get ready
+          </p>
+        )}
         {hasShownChoices && !isAnswerRevealed && (
-          <div className="flex justify-between items-center">
-            <div className="text-5xl">
+          <div className="mx-auto flex max-w-5xl items-center justify-between">
+            <div className="text-5xl font-bold">
               <CountdownCircleTimer
                 onComplete={() => {
                   onTimeUp()
                 }}
                 isPlaying
                 duration={20}
-                colors={['#004777', '#F7B801', '#A30000', '#A30000']}
+                size={140}
+                strokeWidth={10}
+                trailColor="#27272a"
+                colors={['#1570ef', '#F7B801', '#dc2626', '#dc2626']}
                 colorsTime={[7, 5, 2, 0]}
               >
                 {({ remainingTime }) => remainingTime}
               </CountdownCircleTimer>
             </div>
-            <div className="text-center">
-              <div className="text-6xl pb-4">{answers.length}</div>
-              <div className="text-3xl">Answers</div>
+            <div className="rounded-xl bg-white/10 px-8 py-4 text-center">
+              <div className="text-6xl font-bold tabular-nums">
+                {answers.length}
+              </div>
+              <div className="text-2xl text-white/80">Answers</div>
             </div>
           </div>
         )}
         {isAnswerRevealed && (
-          <div className="flex justify-center">
-            {question.choices.map((choice, index) => (
-              <div
-                key={choice.id}
-                className="mx-2 h-48 w-24 flex flex-col items-stretch justify-end"
-              >
-                <div className="flex-grow relative">
-                  <div
-                    style={{
-                      height: `${
-                        (answers.filter(
-                          (answer) => answer.choice_id === choice.id
-                        ).length *
-                          100) /
-                        (answers.length || 1)
-                      }%`,
-                    }}
-                    className={`absolute bottom-0 left-0 right-0 mb-1 rounded-t answer-${index}`}
-                  ></div>
-                </div>
+          <div className="flex justify-center gap-4">
+            {question.choices.map((choice, index) => {
+              const count = countFor(choice.id)
+              return (
                 <div
-                  className={`mt-1 text-lg text-center py-2 rounded-b answer-${index}`}
+                  key={choice.id}
+                  className="flex h-44 w-28 flex-col items-stretch justify-end"
                 >
-                  {String.fromCharCode(65 + index)} ·{' '}
-                  {
-                    answers.filter((answer) => answer.choice_id === choice.id)
-                      .length
-                  }
+                  <div className="mb-1 text-center text-2xl font-bold tabular-nums">
+                    {count}
+                  </div>
+                  <div className="relative min-h-[4px] flex-grow">
+                    <div
+                      style={{
+                        height: `${(count * 100) / (answers.length || 1)}%`,
+                      }}
+                      className={`absolute bottom-0 left-0 right-0 min-h-[4px] origin-bottom rounded-t motion-safe:animate-grow answer-${index} ${
+                        choice.is_correct ? '' : 'opacity-60'
+                      }`}
+                    ></div>
+                  </div>
+                  <div
+                    className={`mt-1 rounded-b py-2 text-center text-xl font-bold answer-${index} ${
+                      choice.is_correct ? '' : 'opacity-60'
+                    }`}
+                  >
+                    {String.fromCharCode(65 + index)}
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>
@@ -220,45 +266,42 @@ export default function Quiz({
               }
             >
               <div
-                className={`px-4 py-6 w-full text-2xl rounded font-bold flex justify-between answer-${index} ${
-                  isAnswerRevealed && !choice.is_correct ? 'opacity-60' : ''
+                style={{ animationDelay: `${index * 80}ms` }}
+                className={`flex w-full items-center gap-4 rounded-lg px-4 py-6 text-2xl font-bold shadow-md motion-safe:animate-fade-up answer-${index} ${
+                  isAnswerRevealed && !choice.is_correct ? 'opacity-50' : ''
+                } ${
+                  isAnswerRevealed && choice.is_correct
+                    ? 'ring-4 ring-white'
+                    : ''
                 }`}
               >
-                <div className="min-w-0 break-words">{choice.body}</div>
+                <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-black/20 text-xl">
+                  {String.fromCharCode(65 + index)}
+                </span>
+                <div className="min-w-0 flex-grow break-words">
+                  {choice.body}
+                </div>
                 {isAnswerRevealed && (
-                  <div>
-                    {choice.is_correct && (
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth={5}
-                        stroke="currentColor"
-                        className="w-6 h-6"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="m4.5 12.75 6 6 9-13.5"
-                        />
-                      </svg>
-                    )}
-                    {!choice.is_correct && (
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth={5}
-                        stroke="currentColor"
-                        className="w-6 h-6"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M6 18 18 6M6 6l12 12"
-                        />
-                      </svg>
-                    )}
+                  <div className="flex-shrink-0">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={5}
+                      stroke="currentColor"
+                      className="h-8 w-8"
+                      aria-label={choice.is_correct ? 'Correct' : 'Incorrect'}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d={
+                          choice.is_correct
+                            ? 'm4.5 12.75 6 6 9-13.5'
+                            : 'M6 18 18 6M6 6l12 12'
+                        }
+                      />
+                    </svg>
                   </div>
                 )}
               </div>
@@ -267,9 +310,17 @@ export default function Quiz({
         </div>
       )}
 
-      <div className="flex text-white py-2 px-4 items-center bg-black">
-        <div className="text-2xl">
-          {question.order + 1}/{questionCount}
+      <div className="bg-black px-4 py-2">
+        <div className="text-xl text-white/80">
+          Question {question.order + 1} of {questionCount}
+        </div>
+        <div className="mt-2 h-1 rounded bg-white/15">
+          <div
+            className="h-1 rounded bg-brand transition-[width] duration-500"
+            style={{
+              width: `${((question.order + 1) * 100) / questionCount}%`,
+            }}
+          ></div>
         </div>
       </div>
     </div>

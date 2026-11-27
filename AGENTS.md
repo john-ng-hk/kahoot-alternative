@@ -15,6 +15,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Next.js 14 App Router, all client components, Tailwind. There is no custom backend: the browser talks to Supabase directly through the single `supabase` client exported from `src/types/types.ts`. That file also defines the app's domain types (`Question`, `QuizSet` etc.) derived from the generated `src/types/supabase.ts`.
 
+Branding is Ingram Micro and swappable: colour variables in `src/app/globals.css` `:root` (mapped in `tailwind.config.ts` as `brand` and `ink`), logo files in `public/brand/`, name and logo component in `src/components/brand.tsx`. Rebrand by editing those only.
+
 Routes:
 - `/` player entry; `/game/[id]` player game screen
 - `/host`, `/host/dashboard` (pick a quiz set, create a game), `/host/game/[id]` host game screen

@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button'
 import { Notice } from '@/components/ui/notice'
+import { BrandLogo } from '@/components/brand'
 import { Participant, supabase } from '@/types/types'
 import { useQRCode } from 'next-qrcode'
 import { useEffect, useState } from 'react'
@@ -29,17 +30,26 @@ export default function Lobby({
   }
 
   return (
-    <div className="min-h-screen bg-ink text-white flex items-center justify-center p-6">
-      <div className="grid w-full max-w-5xl items-start gap-8 md:grid-cols-2">
+    <div className="flex min-h-screen items-center justify-center bg-ink bg-[radial-gradient(ellipse_at_top_right,rgb(var(--brand-primary)/0.35),transparent_60%)] p-6 pt-24 text-white">
+      <div className="grid w-full max-w-5xl items-start gap-10 md:grid-cols-2">
         <div className="flex flex-col gap-6">
-          <h1 className="text-3xl font-bold">
-            Players ({participants.length})
+          <BrandLogo />
+          <h1 className="text-4xl font-bold">
+            Players{' '}
+            <span className="rounded-full bg-white/15 px-3 py-1 text-3xl">
+              {participants.length}
+            </span>
           </h1>
-          <div className="max-h-[60vh] overflow-y-auto">
+          <div className="max-h-[50vh] overflow-y-auto">
+            {participants.length === 0 && (
+              <p className="text-xl text-white/80 motion-safe:animate-pulse-soft">
+                Waiting for players
+              </p>
+            )}
             <div className="flex flex-wrap gap-3">
               {participants.map((participant) => (
                 <div
-                  className="rounded-full bg-accent px-4 py-2 text-lg break-words"
+                  className="rounded-full bg-brand px-5 py-2 text-xl font-semibold break-words shadow-md motion-safe:animate-fade-up"
                   key={participant.id}
                 >
                   {participant.nickname}
@@ -48,12 +58,12 @@ export default function Lobby({
             </div>
           </div>
           {error && <Notice>{error}</Notice>}
-          <Button className="self-start text-xl" onClick={onClickStartGame}>
-            Start Game
+          <Button className="self-start px-8 py-4 text-2xl" onClick={onClickStartGame}>
+            Start game
           </Button>
         </div>
-        <div className="card flex flex-col items-center gap-4">
-          <h2 className="text-2xl font-bold text-ink">Scan to join</h2>
+        <div className="card flex flex-col items-center gap-4 p-8">
+          <h2 className="text-3xl font-bold text-ink">Scan to join</h2>
           {origin && (
             <Canvas
               text={`${origin}/game/${gameId}`}
@@ -64,6 +74,11 @@ export default function Lobby({
                 width: 400,
               }}
             />
+          )}
+          {origin && (
+            <p className="max-w-full break-all text-center text-sm text-gray-700">
+              {origin}/game/{gameId}
+            </p>
           )}
         </div>
       </div>

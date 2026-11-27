@@ -80,7 +80,7 @@ export default function ImportQuizzesPage() {
           <a
             href="/quiz-import-example.json"
             download
-            className="font-semibold text-accent underline"
+            className="font-semibold text-brand underline"
           >
             Download an example file
           </a>

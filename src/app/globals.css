@@ -2,12 +2,23 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Brand tokens (Ingram Micro). RGB channels so Tailwind opacity modifiers work.
+   To rebrand: change these, the font stack, public/brand/* and src/components/brand.tsx. */
+:root {
+  --brand-primary: 21 112 239; /* #1570ef */
+  --brand-primary-dark: 15 91 196; /* #0f5bc4, hover and small text */
+  --brand-primary-light: 106 166 247; /* #6aa6f7, links on black */
+  --brand-ink: 0 0 0;
+  --brand-font: 'Helvetica Neue', Helvetica, Arial, var(--font-inter),
+    sans-serif;
+}
+
 @layer components {
   .btn-primary {
-    @apply inline-flex min-h-[44px] items-center justify-center rounded-lg bg-accent px-5 py-3 font-semibold text-white hover:bg-violet-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:opacity-50;
+    @apply inline-flex min-h-[44px] items-center justify-center rounded-lg bg-brand px-5 py-3 font-semibold text-white hover:bg-brand-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:opacity-50;
   }
   .btn-secondary {
-    @apply inline-flex min-h-[44px] items-center justify-center rounded-lg border border-gray-300 bg-white px-5 py-3 font-semibold text-ink hover:bg-gray-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:opacity-50;
+    @apply inline-flex min-h-[44px] items-center justify-center rounded-lg border border-gray-300 bg-white px-5 py-3 font-semibold text-ink hover:bg-gray-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:opacity-50;
   }
   .card {
     @apply rounded-xl bg-white p-6 text-ink shadow-md;
@@ -31,6 +42,7 @@
 
 body {
     padding: 0;
+    font-family: var(--brand-font);
     /* background-color: black;
     background-image: url('/background.jpg');
     background-position: center;

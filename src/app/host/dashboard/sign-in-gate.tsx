@@ -125,7 +125,7 @@ export default function SignInGate({
           </Button>
           <button
             type="button"
-            className="text-left text-sm text-accent underline"
+            className="text-left text-sm text-brand underline"
             onClick={() => {
               setSent(false)
               setCode('')

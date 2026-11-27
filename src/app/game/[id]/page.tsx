@@ -3,6 +3,7 @@
 import React, { FormEvent, useEffect, useRef, useState } from 'react'
 import { RealtimeChannel } from '@supabase/supabase-js'
 import { Choice, Game, Participant, Question, supabase } from '@/types/types'
+import { BrandLogo } from '@/components/brand'
 import Lobby from './lobby'
 import Quiz from './quiz'
 
@@ -141,10 +142,11 @@ export default function Home({
 
 function Results({ participant }: { participant: Participant }) {
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
-      <div className="card w-full max-w-md text-center">
+    <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(ellipse_at_top,rgb(var(--brand-primary)/0.35),transparent_60%)] p-4">
+      <div className="card w-full max-w-md border-t-8 border-brand text-center motion-safe:animate-pop">
+        <BrandLogo onDark={false} className="mx-auto mb-4 w-32" />
         <h2 className="pb-4 text-2xl font-bold break-words">
-          Hey {participant.nickname}！
+          Hey {participant.nickname}
         </h2>
         <p className="text-gray-700">Thanks for playing 🎉</p>
       </div>

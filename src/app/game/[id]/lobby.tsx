@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button'
 import { Notice } from '@/components/ui/notice'
+import { BrandLogo } from '@/components/brand'
 import { Participant, supabase } from '@/types/types'
 import { on } from 'events'
 import { FormEvent, useEffect, useState } from 'react'
@@ -54,8 +55,9 @@ export default function Lobby({
   }, [gameId, onRegisterCompleted])
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
-      <div className="card w-full max-w-md">
+    <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(ellipse_at_top,rgb(var(--brand-primary)/0.35),transparent_60%)] p-4">
+      <div className="card w-full max-w-md border-t-8 border-brand motion-safe:animate-fade-up">
+        <BrandLogo onDark={false} className="-ml-3 mb-4 w-32" />
         {!participant && (
           <Register
             gameId={gameId}
@@ -69,12 +71,19 @@ export default function Lobby({
         {participant && (
           <div>
             <h1 className="pb-4 text-2xl font-bold break-words">
-              Welcome {participant.nickname}！
+              Welcome {participant.nickname}
             </h1>
             <p className="text-gray-700">
               You have been registered and your nickname should show up on the
               admin screen. Please sit back and wait until the game master
               starts the game.
+            </p>
+            <p
+              className="mt-4 flex items-center gap-2 font-semibold text-brand-dark motion-safe:animate-pulse-soft"
+              role="status"
+            >
+              <span className="h-3 w-3 rounded-full bg-brand"></span>
+              Waiting for the host to start
             </p>
           </div>
         )}

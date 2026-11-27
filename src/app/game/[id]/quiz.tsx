@@ -29,6 +29,9 @@ export default function Quiz({
     setError(null)
   }, [question.id])
 
+  /** Long answers get a full-width row each; two narrow columns would break words */
+  const hasLongChoice = question.choices.some((c) => c.body.length > 30)
+
   const answer = async (choice: Choice) => {
     setChosenChoice(choice)
 
@@ -58,7 +61,7 @@ export default function Quiz({
   return (
     <div className="h-screen flex flex-col items-stretch bg-ink text-white relative">
       <div className="px-4 pt-8 pb-4 text-center">
-        <h2 className="mx-auto max-w-3xl break-words rounded-xl bg-white p-6 text-2xl font-bold text-ink md:text-3xl">
+        <h2 className="mx-auto max-w-3xl break-words rounded-xl border-b-8 border-brand bg-white p-6 text-2xl font-bold text-ink shadow-lg md:text-3xl">
           {question.body}
         </h2>
       </div>
@@ -70,7 +73,7 @@ export default function Quiz({
 
       {!isAnswerRevealed && chosenChoice && (
         <div className="flex-grow flex justify-center items-center">
-          <div className="text-white text-2xl text-center p-4">
+          <div className="p-4 text-center text-2xl text-white motion-safe:animate-pulse-soft">
             Wait for others to answer...
           </div>
         </div>
@@ -97,11 +100,16 @@ export default function Quiz({
       {hasShownChoices && !isAnswerRevealed && !chosenChoice && (
         <div className="flex-grow flex flex-col items-stretch">
           <div className="flex-grow"></div>
-          <div className="grid grid-cols-2 gap-3 p-4">
+          <div
+            className={`grid gap-3 p-4 ${
+              hasLongChoice ? 'grid-cols-1' : 'grid-cols-2'
+            }`}
+          >
             {question.choices.map((choice, index) => (
               <div
                 key={choice.id}
                 className={
+                  !hasLongChoice &&
                   question.choices.length % 2 === 1 &&
                   index === question.choices.length - 1
                     ? 'col-span-2'
@@ -111,7 +119,8 @@ export default function Quiz({
                 <button
                   onClick={() => answer(choice)}
                   disabled={chosenChoice !== null || isAnswerRevealed}
-                  className={`min-h-[44px] w-full rounded px-4 py-6 text-xl font-bold flex items-center justify-between gap-3 answer-${index} ${
+                  style={{ animationDelay: `${index * 80}ms` }}
+                  className={`flex min-h-[64px] w-full items-center justify-between gap-3 rounded-lg px-4 py-6 text-xl font-bold shadow-md transition-transform active:scale-95 motion-safe:animate-fade-up answer-${index} ${
                     isAnswerRevealed && !choice.is_correct ? 'opacity-60' : ''
                   }`}
                 >
@@ -165,54 +174,41 @@ export default function Quiz({
       )}
 
       {isAnswerRevealed && (
-        <div className="flex-grow flex justify-center items-center flex-col">
-          <h2 className="text-white text-2xl text-center pb-2">
-            {chosenChoice?.is_correct ? 'Correct' : 'Incorrect'}
-          </h2>
+        <div className="flex flex-grow flex-col items-center justify-center">
           <div
-            className={`text-white rounded-full p-4  ${
+            className={`rounded-full p-6 text-white shadow-lg motion-safe:animate-pop ${
               chosenChoice?.is_correct ? 'bg-answer-green' : 'bg-answer-red'
             }`}
           >
-            {chosenChoice?.is_correct && (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={5}
-                stroke="currentColor"
-                className="w-6 h-6"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="m4.5 12.75 6 6 9-13.5"
-                />
-              </svg>
-            )}
-            {!chosenChoice?.is_correct && (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={5}
-                stroke="currentColor"
-                className="w-6 h-6"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M6 18 18 6M6 6l12 12"
-                />
-              </svg>
-            )}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={4}
+              stroke="currentColor"
+              className="h-16 w-16"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d={
+                  chosenChoice?.is_correct
+                    ? 'm4.5 12.75 6 6 9-13.5'
+                    : 'M6 18 18 6M6 6l12 12'
+                }
+              />
+            </svg>
           </div>
+          <h2 className="pt-4 text-center text-3xl font-bold text-white">
+            {chosenChoice?.is_correct ? 'Correct' : 'Incorrect'}
+          </h2>
         </div>
       )}
 
       <div className="flex items-center bg-black px-4 py-2 text-lg text-white">
         <div>
-          {question.order + 1}/{questionCount}
+          Question {question.order + 1} of {questionCount}
         </div>
       </div>
     </div>
