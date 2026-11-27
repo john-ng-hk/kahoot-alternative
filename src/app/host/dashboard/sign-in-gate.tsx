@@ -19,6 +19,8 @@ export default function SignInGate({
   const [sent, setSent] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [sending, setSending] = useState(false)
+  const [code, setCode] = useState('')
+  const [verifying, setVerifying] = useState(false)
 
   useEffect(() => {
     // is_anonymous is in the JWT and on the user object, but missing from this supabase-js version's User type
@@ -59,6 +61,24 @@ export default function SignInGate({
     setSent(true)
   }
 
+  /** Sign in with the code from the email. Mail scanners can open the link and use it up, but they cannot enter a code. */
+  const verifyCode = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setVerifying(true)
+    setError(null)
+    const { error } = await supabase.auth.verifyOtp({
+      email: email.trim(),
+      token: code.trim(),
+      type: 'email',
+    })
+    setVerifying(false)
+    if (error) {
+      setError(error.message)
+      return
+    }
+    // onAuthStateChange switches the page to the signed-in view
+  }
+
   if (state === 'loading') {
     return <p className="text-gray-700">Loading...</p>
   }
@@ -71,7 +91,7 @@ export default function SignInGate({
     <div className="card max-w-md">
       <h2 className="mb-2 text-xl font-bold">Sign in to host</h2>
       <p className="mb-4 text-gray-700">
-        Enter your email. We will send you a sign-in link. Quizzes you create
+        Enter your email. We will send you a sign-in code and link. Quizzes you create
         are tied to this email account.
       </p>
       {error && (
@@ -80,10 +100,41 @@ export default function SignInGate({
         </div>
       )}
       {sent ? (
-        <p className="text-ink">
-          Check your email for the sign-in link. You can close this tab after
-          you open it.
-        </p>
+        <form onSubmit={verifyCode} className="flex flex-col gap-3">
+          <p className="text-ink">
+            We sent an email to <strong className="break-all">{email.trim()}</strong>.
+            Enter the code from the email, or open the link in it.
+          </p>
+          <label className="flex flex-col gap-1 text-ink">
+            <span className="font-bold">Code</span>
+            <input
+              className="input"
+              type="text"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              pattern="[0-9]{6,10}"
+              minLength={6}
+              maxLength={10}
+              required
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+            />
+          </label>
+          <Button type="submit" disabled={verifying}>
+            {verifying ? 'Checking...' : 'Sign in'}
+          </Button>
+          <button
+            type="button"
+            className="text-left text-sm text-accent underline"
+            onClick={() => {
+              setSent(false)
+              setCode('')
+              setError(null)
+            }}
+          >
+            Use a different email
+          </button>
+        </form>
       ) : (
         <form onSubmit={sendLink} className="flex flex-col gap-3">
           <label className="flex flex-col gap-1 text-ink">
